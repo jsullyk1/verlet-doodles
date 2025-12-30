@@ -47,22 +47,24 @@ pub fn main() !void {
     // Add collision system
     // Add render system
 
-    var timer = try std.time.Timer.start();
+    const sim_ms = 1000 / config.updateRateHz;
     while (!rl.windowShouldClose()) {
-        rl.beginDrawing();
-        defer rl.endDrawing();
-        rl.clearBackground(rl.Color.white);
-        const elapsed_ms = timer.lap() / std.time.ns_per_ms;
-        try spawner.update(&entities, elapsed_ms);
-        gravity.update(&entities, elapsed_ms);
+        if (entities.len() > 10 and rl.getFPS() < 3 * config.updateRateHz / 4) spawner.stop();
+        try spawner.update(&entities, sim_ms);
+        gravity.update(&entities, sim_ms);
         // Relax constraints
         for (0..config.numSubsteps) |_| {
             world.relax(&entities);
             collision.relax(&entities);
         }
-        world.update(&entities, elapsed_ms);
+        world.update(&entities, sim_ms);
+
+        rl.beginDrawing();
+        defer rl.endDrawing();
+        rl.clearBackground(rl.Color.white);
         world.draw(&entities);
         rl.drawFPS(config.screenWidth - 80, 20);
+        rl.drawText(rl.textFormat("Pct: %d", .{entities.len()}), 20, 40, 20, rl.Color.black);
         rl.drawText("Verlet Simulation", 20, 20, 20, rl.Color.black);
     }
 }
