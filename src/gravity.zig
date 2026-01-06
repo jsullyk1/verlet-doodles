@@ -15,7 +15,7 @@ pub const Gravity = struct {
     pub fn update(self: @This(), entities: *EntityStore, _: u64) void {
         if (!self.active) return;
         for (entities.getObjects()) |*partical| {
-            partical.accelerate(self.g);
+            partical.acceleration += self.g;
         }
     }
 };

@@ -38,38 +38,4 @@ pub const EntityStore = struct {
     }
 };
 
-pub const EntityGenerator = struct {
-    spawn_rate: u32,
-    last_update: u64,
-    active: bool,
 
-    pub fn init(spawn_rate: u32) @This() {
-        return .{
-            .spawn_rate = spawn_rate,
-            .last_update = spawn_rate,
-            .active = true,
-        };
-    }
-
-
-    pub fn stop(self: *@This()) void {
-        self.active = false;
-    }
-    pub fn update(self: *@This(), entities: *EntityStore, elapsed_ms: u64) !void {
-        if (! self.active) return;
-        self.last_update += elapsed_ms;
-        if (self.last_update > self.spawn_rate) {
-            self.last_update = 0;
-            try entities.addObject(Partical.init(
-                @intCast(entities.len() + 1),
-                .{
-                    @as(f32, @floatFromInt(rl.getScreenWidth())) * 0.75,
-                    @as(f32, @floatFromInt(rl.getScreenHeight())) * 0.25,
-                },
-                .{ 0.0, 0.0 },
-                10,
-                rl.Color.white,
-            ));
-        }
-    }
-};

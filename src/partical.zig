@@ -1,24 +1,22 @@
 const rl = @import("raylib");
 const print = @import("std").debug.print;
+const EntityStore = @import("entity.zig").EntityStore;
 const Vec2 = @Vector(2, f32);
 
 pub const Partical = struct {
-    id: i32,
     current_position: Vec2,
     last_position: Vec2,
     acceleration: Vec2,
     radius: f32,
-    color: rl.Color,
+    color: u32,
 
     pub fn init(
-        id: i32,
         start_position: [2]f32,
         start_velocity: [2]f32,
         radius: f32,
-        color: rl.Color,
+        color: u32,
     ) @This() {
         return .{
-            .id = id,
             .current_position = Vec2{ start_position[0], start_position[1] },
             .last_position = start_position - Vec2{ start_velocity[0], start_velocity[1] },
             .acceleration = @as(Vec2, @splat(0.0)),
@@ -26,26 +24,59 @@ pub const Partical = struct {
             .color = color,
         };
     }
+};
 
-    pub fn updatePosition(self: *@This(), dt: f32) void {
-        const velocity = self.current_position - self.last_position;
+pub const ParticalEmitter = struct {
+    spawn_rate: u32,
+    last_update: u64 = 0,
+    active: bool = true,
+    position: [2]f32,
 
-        self.last_position = self.current_position;
-        self.current_position = self.last_position + velocity + self.acceleration * @as(Vec2, @splat(dt * dt));
-        self.acceleration = @as(Vec2, @splat(0));
+    pub fn init(position: Vec2, spawn_rate: u32) @This() {
+        return .{
+            .spawn_rate = spawn_rate,
+            .last_update = spawn_rate,
+            .active = true,
+            .position = position,
+        };
     }
 
-    pub fn accelerate(self: *@This(), acceleration: Vec2) void {
-        self.acceleration = acceleration;
+    pub fn stop(self: *@This()) void {
+        self.active = false;
     }
 
-    pub fn draw(self: @This()) void {
-        rl.drawCircle(
-            @as(i32, @intFromFloat(self.current_position[0])),
-            @as(i32, @intFromFloat(self.current_position[1])),
-            @as(f32, self.radius),
-            self.color,
-        );
+    pub fn update(self: *@This(), entities: *EntityStore, elapsed_ms: u64) !void {
+        if (!self.active) return;
+        self.last_update += elapsed_ms;
+        if (self.last_update > self.spawn_rate) {
+            self.last_update = 0;
+            try entities.addObject(Partical.init(
+                .{ self.position[0], self.position[1] },
+                .{ 0.0, 0.0 },
+                10,
+                0xFF0000FF,
+            ));
+        }
     }
 };
 
+pub fn updatePositions(particals: *EntityStore, sim_dt: u32) void {
+    const fdt = 1.0 / @as(f32, @floatFromInt(1000 / sim_dt));
+    for (particals.getObjects()) |*p| {
+        const velocity = p.current_position - p.last_position;
+        p.last_position = p.current_position;
+        p.current_position = p.last_position + velocity + p.acceleration * @as(Vec2, @splat(fdt * fdt));
+        p.acceleration = @as(Vec2, @splat(0.0));
+    }
+}
+
+pub fn drawParticals(particals: *EntityStore) void {
+    for (particals.getObjects()) |*p| {
+        rl.drawCircle(
+            @as(i32, @intFromFloat(p.current_position[0])),
+            @as(i32, @intFromFloat(p.current_position[1])),
+            @as(f32, p.radius),
+            rl.getColor(p.color),
+        );
+    }
+}

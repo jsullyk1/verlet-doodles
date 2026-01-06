@@ -15,22 +15,13 @@ pub const World = struct {
         };
     }
 
-    pub fn draw(self: @This(), entities: *EntityStore) void {
+    pub fn draw(self: @This()) void {
         rl.drawCircle(
             @as(i32, @intFromFloat(self.center[0])),
             @as(i32, @intFromFloat(self.center[1])),
             self.radius,
             self.color,
         );
-        for (entities.getObjects()) |*partical| {
-            partical.draw();
-        }
-    }
-
-    pub fn update(_: @This(), entities: *EntityStore, elapsed_ms: u64) void {
-        for (entities.getObjects()) |*partical| {
-            partical.updatePosition(1.0 / @as(f32, @floatFromInt(1000 / elapsed_ms)));
-        }
     }
 
     pub fn relax(self: @This(), entities: *EntityStore) void {
