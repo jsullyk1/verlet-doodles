@@ -32,7 +32,7 @@ pub fn main() !void {
     defer entities.deinit();
     var emitter = ParticalEmitter.init(.{
         @as(f32, config.screenWidth * 3 / 4),
-        @as(f32, 50) },
+        @as(f32, config.screenHeight / 4) },
         config.spawnRate,
     );
     var gravity = Gravity.init();
@@ -43,12 +43,6 @@ pub fn main() !void {
         },
         @min(@as(f32, config.screenWidth / 2 - 5), @as(f32, config.screenHeight / 2 - 5)),
     );
-    // Init collision system
-
-    // Add initial entities (Walls)
-    // Add gravity system
-    // Add collision system
-    // Add render system
 
     const sim_ms = 1000 / config.updateRateHz;
     while (!rl.windowShouldClose()) {
