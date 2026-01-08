@@ -1,0 +1,94 @@
+const rl = @import("raylib");
+
+const Partical = @import("partical.zig").Partical;
+const container = @import("container.zig");
+const ParticalEmitter = @import("partical.zig").ParticalEmitter;
+const updatePositions = @import("partical.zig").updatePositions;
+const drawParticals = @import("partical.zig").drawParticals;
+const EntitiesStore = @import("entity.zig").EntityStore;
+const Gravity = @import("gravity.zig").Gravity;
+const collision = @import("collisions.zig");
+
+const Vec2 = @Vector(2, f32);
+
+pub const Config = struct {
+    screenWidth: u32 = 900,
+    screenHeight: u32 = 900,
+    updateRateHz: u32 = 60,
+    numSubsteps: u32 = 8,
+    spawnRate: u32 = 50,
+};
+
+pub const App = struct {
+    config: Config,
+    particals: EntitiesStore,
+    emitter: ParticalEmitter,
+    gravity: Gravity,
+    boundary: container.Container,
+
+    pub fn init(config: Config) !@This() {
+        
+        const particals = EntitiesStore.init();
+        const emitter = ParticalEmitter.init(
+            .{ @as(f32, @floatFromInt(config.screenWidth * 3 / 4)), @as(f32, @floatFromInt(config.screenHeight / 4)) },
+            config.spawnRate,
+        );
+        const gravity = Gravity.init();
+        const boundary = container.Container.init(
+            .{
+                @as(f32, @floatFromInt(config.screenWidth / 2)),
+                @as(f32, @floatFromInt(config.screenHeight / 2)),
+            },
+            @min(@as(f32, @floatFromInt(config.screenWidth / 2 - 5)), @as(f32, @floatFromInt(config.screenHeight / 2 - 5))),
+            0x000000FF,
+        );
+        return .{
+            .config = config,
+            .particals = particals,
+            .emitter = emitter,
+            .gravity = gravity,
+            .boundary = boundary,
+        };
+    }
+
+    pub fn deinit(self: *@This()) void {
+        self.particals.deinit();
+    }
+
+    pub fn run(self: *@This()) !void {
+        const sim_ms = 1000 / self.config.updateRateHz;
+        rl.initWindow(@intCast(self.config.screenWidth), @intCast(self.config.screenHeight), "Physics!!");
+        defer rl.closeWindow();
+        rl.setTargetFPS(@intCast(self.config.updateRateHz));
+
+        while (!rl.windowShouldClose()) {
+            try self.update(sim_ms);
+            self.render();
+        }
+    }
+
+    fn update(self: *@This(), sim_ms: u32) !void {
+        if (self.particals.len() > 10 and rl.getFPS() < 3 * self.config.updateRateHz / 4) self.emitter.stop();
+        try self.emitter.update(&self.particals, sim_ms);
+        self.gravity.update(&self.particals, sim_ms);
+
+        // Relax constraints
+        for (0..self.config.numSubsteps) |_| {
+            self.boundary.constrainParticals(&self.particals);
+            collision.resolve(&self.particals);
+        }
+        updatePositions(&self.particals, sim_ms);
+    }
+
+    fn render(self: *@This()) void {
+        rl.beginDrawing();
+        defer rl.endDrawing();
+
+        rl.clearBackground(rl.Color.white);
+        container.render(&self.boundary);
+        drawParticals(&self.particals);
+        rl.drawFPS(@as(i32, @intCast(self.config.screenWidth)) - 80, 20);
+        rl.drawText(rl.textFormat("Pct: %d", .{self.particals.len()}), 20, 40, 20, rl.Color.black);
+        rl.drawText("Verlet Simulation", 20, 20, 20, rl.Color.black);
+    }
+};

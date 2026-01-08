@@ -2,7 +2,7 @@ const EntityStore = @import("entity.zig").EntityStore;
 const Vec2 = @Vector(2, f32);
 const std = @import("std");
 
-pub fn relax(entities: *EntityStore) void {
+pub fn resolve(entities: *EntityStore) void {
     const particals = entities.getObjects();
     const response_coef = 0.95;
     for (0..particals.len) |i| {

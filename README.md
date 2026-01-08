@@ -22,3 +22,14 @@ To build the project, make sure you have Zig installed on your system. Then, run
 ```bash
 zig build run
 ```
+
+## TODO
+
+- [ ] Click to set emitter location
+- [ ] Reset button
+- [ ] Change colors over time
+- [ ] Random size particles
+- [ ] Smarter collision algorithm
+- [ ] Change container shape
+- [ ] Turn gravity on/off
+

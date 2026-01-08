@@ -2,30 +2,21 @@ const Vec2 = @Vector(2, f32);
 const rl = @import("raylib");
 const EntityStore = @import("entity.zig").EntityStore;
 
-pub const World = struct {
+pub const Container = struct {
     center: Vec2,
     radius: f32,
-    color: rl.Color,
+    color: u32,
 
-    pub fn init(position: [2]f32, radius: f32) @This() {
+    pub fn init(position: [2]f32, radius: f32, color: u32) @This() {
         return .{
             .center = Vec2{ position[0], position[1] },
             .radius = radius,
-            .color = rl.Color.black,
+            .color = color,
         };
     }
 
-    pub fn draw(self: @This()) void {
-        rl.drawCircle(
-            @as(i32, @intFromFloat(self.center[0])),
-            @as(i32, @intFromFloat(self.center[1])),
-            self.radius,
-            self.color,
-        );
-    }
-
-    pub fn relax(self: @This(), entities: *EntityStore) void {
-        for (entities.getObjects()) |*p| {
+    pub fn constrainParticals(self: @This(), particals: *EntityStore) void {
+        for (particals.getObjects()) |*p| {
             const v = self.center - p.current_position;
             const dist = @sqrt(@reduce(.Add, v * v));
             const c_dist = self.radius - p.radius;
@@ -36,3 +27,12 @@ pub const World = struct {
         }
     }
 };
+
+pub fn render(container: *const Container) void {
+    rl.drawCircle(
+        @as(i32, @intFromFloat(container.center[0])),
+        @as(i32, @intFromFloat(container.center[1])),
+        container.radius,
+        rl.getColor(container.color),
+    );
+}
