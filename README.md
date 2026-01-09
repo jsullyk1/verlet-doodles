@@ -32,4 +32,27 @@ zig build run
 - [ ] Smarter collision algorithm
 - [ ] Change container shape
 - [ ] Turn gravity on/off
+- [ ] Add profiler [Tracy](https://www.reddit.com/r/Zig/comments/zpwoca/is_profiling_with_tracy_still_straightforward_can/)
+
+## First steps
+
+I want to play with performance a bit and see how I can approach the organization of this code to support a larger 
+number of particles. My current termination condition is when the applciation can no longer maintain 75% of the target fps (45fps).
+
+The initial implementation gets to about 1100 particles before dropping below 45fps on my machine. This is with a naive O(n^2) 
+collision detection algorithm. This is also with 8 substeps per frame, which gives a nice stable simulation.
+
+![Verlet Doodles Screenshot 8 substeps](docs/doodles_1100.png)
+
+### 16 Substeps
+
+![Verlet Doodles Screenshot 16 substeps](docs/doodles_850.png)
+
+### Detrminism
+
+The simulation is also deterministic which is nice. Running the same simulation multiple times with the same initial conditions produces the same results.
+
+![Verlet Doodles Screenshot Deterministic](docs/doodles_deterministic.png)
+
+
 
