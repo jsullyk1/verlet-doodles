@@ -26,9 +26,9 @@ zig build run
 ## TODO
 
 - [X] Click to set emitter location
-- [ ] Reset button
+- [X] Reset button
+- [X] Random size particles
 - [ ] Change colors over time
-- [ ] Random size particles
 - [ ] Smarter collision algorithm
 - [ ] Change container shape
 - [ ] Turn gravity on/off

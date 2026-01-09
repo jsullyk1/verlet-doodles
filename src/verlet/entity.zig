@@ -18,6 +18,10 @@ pub const EntityStore = struct {
         };
     }
 
+    pub fn clear(self: *@This()) void {
+        self.entities.clearRetainingCapacity();
+    }
+
     pub fn deinit(self: *@This()) void {
         self.entities.deinit(self.gpa.allocator());
         const leaked = self.gpa.deinit();

@@ -53,6 +53,11 @@ pub const App = struct {
     pub fn deinit(self: *@This()) void {
         self.particals.deinit();
     }
+    
+    pub fn reset(self: *@This()) void {
+        self.particals.clear();
+        self.emitter.stop();
+    }
 
     pub fn run(self: *@This()) !void {
         const sim_ms = 1000 / self.config.updateRateHz;
@@ -68,6 +73,9 @@ pub const App = struct {
                     self.emitter.setPosition(.{ mpos_x, mpos_y });
                     self.emitter.start();
                 }
+            }
+            if (rl.isKeyPressed(rl.KeyboardKey.r)) {
+                self.reset();
             }
 
             try self.update(sim_ms);
@@ -96,7 +104,10 @@ pub const App = struct {
         container.render(&self.boundary);
         drawParticals(&self.particals);
         rl.drawFPS(@as(i32, @intCast(self.config.screenWidth)) - 80, 20);
-        rl.drawText(rl.textFormat("Pct: %d", .{self.particals.len()}), 20, 40, 20, rl.Color.black);
         rl.drawText("Verlet Simulation", 20, 20, 20, rl.Color.black);
+        rl.drawText("Click the circle to spawn particles", 20, 40, 14, rl.Color.dark_green);
+        rl.drawText("Press R to reset", 20, 60, 14, rl.Color.dark_green);
+        rl.drawText("Press ESC to quit", 20, 80, 14, rl.Color.dark_green);
+        rl.drawText(rl.textFormat("Pct: %d", .{self.particals.len()}), 20, 100, 14, rl.Color.dark_blue);
     }
 };

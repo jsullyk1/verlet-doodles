@@ -1,7 +1,12 @@
 const rl = @import("raylib");
+const DefaultPrng = @import("std").Random.DefaultPrng;
+const Random = @import("std").Random;
 const print = @import("std").debug.print;
 const EntityStore = @import("entity.zig").EntityStore;
 const Vec2 = @Vector(2, f32);
+
+var prng = DefaultPrng.init(16);
+const rand = prng.random();
 
 pub const Partical = struct {
     current_position: Vec2,
@@ -57,11 +62,12 @@ pub const ParticalEmitter = struct {
         if (!self.active) return;
         self.last_update += elapsed_ms;
         if (self.last_update > self.spawn_rate) {
+            const radius = @as(f32, @floatFromInt(rand.intRangeAtMost(u32, 7, 11)));
             self.last_update = 0;
             try entities.addObject(Partical.init(
                 .{ self.position[0], self.position[1] },
-                .{ 0.0, 0.0 },
-                10,
+                .{ 5.0, 1.0 },
+                radius,
                 0xFF0000FF,
             ));
         }
