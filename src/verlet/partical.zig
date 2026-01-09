@@ -32,13 +32,21 @@ pub const ParticalEmitter = struct {
     active: bool = true,
     position: [2]f32,
 
-    pub fn init(position: Vec2, spawn_rate: u32) @This() {
+    pub fn init(spawn_rate: u32) @This() {
         return .{
             .spawn_rate = spawn_rate,
             .last_update = spawn_rate,
-            .active = true,
-            .position = position,
+            .active = false,
+            .position = .{ 0.0, 0.0},
         };
+    }
+
+    pub fn setPosition(self: *@This(), position: [2]f32) void {
+        self.position = position;
+    }
+
+    pub fn start(self: *@This()) void {
+        self.active = true;
     }
 
     pub fn stop(self: *@This()) void {

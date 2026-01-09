@@ -1,10 +1,8 @@
-const App = @import("app.zig").App;
-const Config = @import("app.zig").Config;
+const verlet = @import("verlet");
 
 pub fn main() !void {
-    const config = Config{};
-
-    var app = try App.init(config);
+    const config = verlet.Config{};
+    var app = try verlet.App.init(config);
     defer app.deinit();
     try app.run();
 }

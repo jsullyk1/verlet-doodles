@@ -30,7 +30,6 @@ pub const App = struct {
         
         const particals = EntitiesStore.init();
         const emitter = ParticalEmitter.init(
-            .{ @as(f32, @floatFromInt(config.screenWidth * 3 / 4)), @as(f32, @floatFromInt(config.screenHeight / 4)) },
             config.spawnRate,
         );
         const gravity = Gravity.init();
@@ -62,6 +61,15 @@ pub const App = struct {
         rl.setTargetFPS(@intCast(self.config.updateRateHz));
 
         while (!rl.windowShouldClose()) {
+            if (rl.isMouseButtonReleased(rl.MouseButton.left) and self.emitter.active == false) {
+                const mpos_x = @as(f32, @floatFromInt(rl.getMouseX()));
+                const mpos_y = @as(f32, @floatFromInt(rl.getMouseY()));
+                if (self.boundary.isPointInside(.{ mpos_x, mpos_y })) {
+                    self.emitter.setPosition(.{ mpos_x, mpos_y });
+                    self.emitter.start();
+                }
+            }
+
             try self.update(sim_ms);
             self.render();
         }

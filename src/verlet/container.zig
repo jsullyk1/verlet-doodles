@@ -15,6 +15,12 @@ pub const Container = struct {
         };
     }
 
+    pub fn isPointInside(self: @This(), point: [2]f32) bool {
+        const v = self.center - Vec2{ point[0], point[1]};
+        const dist = @sqrt(@reduce(.Add, v * v));
+        return dist < self.radius;
+    }
+
     pub fn constrainParticals(self: @This(), particals: *EntityStore) void {
         for (particals.getObjects()) |*p| {
             const v = self.center - p.current_position;

@@ -25,7 +25,7 @@ zig build run
 
 ## TODO
 
-- [ ] Click to set emitter location
+- [X] Click to set emitter location
 - [ ] Reset button
 - [ ] Change colors over time
 - [ ] Random size particles
