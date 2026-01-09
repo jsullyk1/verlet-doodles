@@ -37,7 +37,7 @@ zig build run
 ## First steps
 
 I want to play with performance a bit and see how I can approach the organization of this code to support a larger 
-number of particles. My current termination condition is when the applciation can no longer maintain 75% of the target fps (45fps).
+number of particles. My current termination condition is when the application can no longer maintain 75% of the target fps (45fps).
 
 The initial implementation gets to about 1100 particles before dropping below 45fps on my machine. This is with a naive O(n^2) 
 collision detection algorithm. This is also with 8 substeps per frame, which gives a nice stable simulation.
