@@ -27,7 +27,6 @@ pub const App = struct {
     boundary: container.Container,
 
     pub fn init(config: Config) !@This() {
-        
         const particals = EntitiesStore.init();
         const emitter = ParticalEmitter.init(
             config.spawnRate,
@@ -53,7 +52,7 @@ pub const App = struct {
     pub fn deinit(self: *@This()) void {
         self.particals.deinit();
     }
-    
+
     pub fn reset(self: *@This()) void {
         self.particals.clear();
         self.emitter.stop();
@@ -66,12 +65,12 @@ pub const App = struct {
         rl.setTargetFPS(@intCast(self.config.updateRateHz));
 
         while (!rl.windowShouldClose()) {
-            if (rl.isMouseButtonReleased(rl.MouseButton.left) and self.emitter.active == false) {
+            if (rl.isMouseButtonReleased(rl.MouseButton.left)) {
                 const mpos_x = @as(f32, @floatFromInt(rl.getMouseX()));
                 const mpos_y = @as(f32, @floatFromInt(rl.getMouseY()));
                 if (self.boundary.isPointInside(.{ mpos_x, mpos_y })) {
                     self.emitter.setPosition(.{ mpos_x, mpos_y });
-                    self.emitter.start();
+                    if(!self.emitter.active) self.emitter.start();
                 }
             }
             if (rl.isKeyPressed(rl.KeyboardKey.r)) {
