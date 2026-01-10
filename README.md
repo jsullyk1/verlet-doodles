@@ -28,10 +28,11 @@ zig build run
 - [X] Click to set emitter location
 - [X] Reset button
 - [X] Random size particles
-- [ ] Change colors over time
+- [X] Change colors over time
 - [ ] Smarter collision algorithm
 - [ ] Change container shape
-- [ ] Turn gravity on/off
+- [X] Turn gravity on/off
+- [ ] Add logging
 - [ ] Add profiler [Tracy](https://www.reddit.com/r/Zig/comments/zpwoca/is_profiling_with_tracy_still_straightforward_can/)
 
 ## First steps

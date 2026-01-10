@@ -76,6 +76,9 @@ pub const App = struct {
             if (rl.isKeyPressed(rl.KeyboardKey.r)) {
                 self.reset();
             }
+            if (rl.isKeyPressed(rl.KeyboardKey.g)) {
+                self.gravity.active = !self.gravity.active;
+            }
 
             try self.update(sim_ms);
             self.render();
@@ -105,8 +108,9 @@ pub const App = struct {
         rl.drawFPS(@as(i32, @intCast(self.config.screenWidth)) - 80, 20);
         rl.drawText("Verlet Simulation", 20, 20, 20, rl.Color.black);
         rl.drawText("Click the circle to spawn particles", 20, 40, 14, rl.Color.dark_green);
-        rl.drawText("Press R to reset", 20, 60, 14, rl.Color.dark_green);
-        rl.drawText("Press ESC to quit", 20, 80, 14, rl.Color.dark_green);
-        rl.drawText(rl.textFormat("Pct: %d", .{self.particals.len()}), 20, 100, 14, rl.Color.dark_blue);
+        rl.drawText("Press 'r' to reset", 20, 54, 14, rl.Color.dark_green);
+        rl.drawText("Pres 'g' to toggle gravity", 20, 68, 14, rl.Color.dark_green);
+        rl.drawText("Press ESC to quit", 20, 82, 14, rl.Color.dark_green);
+        rl.drawText(rl.textFormat("Pct: %d", .{self.particals.len()}), 20, 96, 14, rl.Color.dark_blue);
     }
 };
