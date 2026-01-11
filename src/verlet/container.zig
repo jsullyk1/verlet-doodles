@@ -1,34 +1,38 @@
-const Vec2 = @Vector(2, f32);
 const rl = @import("raylib");
 const EntityStore = @import("entity.zig").EntityStore;
 
 pub const Container = struct {
-    center: Vec2,
+    center_x: f32,
+    center_y: f32,
     radius: f32,
     color: u32,
 
     pub fn init(position: [2]f32, radius: f32, color: u32) @This() {
         return .{
-            .center = Vec2{ position[0], position[1] },
+            .center_x = position[0],
+            .center_y = position[1],
             .radius = radius,
             .color = color,
         };
     }
 
     pub fn isPointInside(self: @This(), point: [2]f32) bool {
-        const v = self.center - Vec2{ point[0], point[1]};
-        const dist = @sqrt(@reduce(.Add, v * v));
-        return dist < self.radius;
+        const dx = self.center_x - point[0];
+        const dy = self.center_y - point[1];
+        const dist2 = dx * dx + dy * dy;
+        return dist2 < self.radius * self.radius;
     }
 
     pub fn constrainParticals(self: @This(), particals: *EntityStore) void {
         for (particals.getObjects()) |*p| {
-            const v = self.center - p.current_position;
-            const dist = @sqrt(@reduce(.Add, v * v));
-            const c_dist = self.radius - p.radius;
-            if (dist > c_dist) {
-                const n = v / @as(Vec2, @splat(dist));
-                p.current_position = self.center - (n * @as(Vec2, @splat(c_dist)));
+            const dcp_x = self.center_x - p.pos_x;
+            const dcp_y = self.center_y - p.pos_y;
+            const dist = @sqrt(dcp_x * dcp_x + dcp_y * dcp_y);
+            if (dist > (self.radius - p.radius)) {
+                const n_x = dcp_x / dist;
+                const n_y = dcp_y / dist;
+                p.pos_x = self.center_x - n_x * (self.radius - p.radius);
+                p.pos_y = self.center_y - n_y * (self.radius - p.radius);
             }
         }
     }
@@ -36,8 +40,8 @@ pub const Container = struct {
 
 pub fn render(container: *const Container) void {
     rl.drawCircle(
-        @as(i32, @intFromFloat(container.center[0])),
-        @as(i32, @intFromFloat(container.center[1])),
+        @as(i32, @intFromFloat(container.center_x)),
+        @as(i32, @intFromFloat(container.center_y)),
         container.radius,
         rl.getColor(container.color),
     );

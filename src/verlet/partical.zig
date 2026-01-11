@@ -3,15 +3,17 @@ const DefaultPrng = @import("std").Random.DefaultPrng;
 const Random = @import("std").Random;
 const print = @import("std").debug.print;
 const EntityStore = @import("entity.zig").EntityStore;
-const Vec2 = @Vector(2, f32);
 
 var prng = DefaultPrng.init(16);
 const rand = prng.random();
 
 pub const Partical = struct {
-    current_position: Vec2,
-    last_position: Vec2,
-    acceleration: Vec2,
+    pos_x: f32,
+    pos_y: f32,
+    lpos_x: f32,
+    lpos_y: f32,
+    accel_x: f32 = 0,
+    accel_y: f32 = 0,
     radius: f32,
     color: u32,
 
@@ -22,15 +24,15 @@ pub const Partical = struct {
         color: u32,
     ) @This() {
         return .{
-            .current_position = Vec2{ start_position[0], start_position[1] },
-            .last_position = start_position - Vec2{ start_velocity[0], start_velocity[1] },
-            .acceleration = @as(Vec2, @splat(0.0)),
+            .pos_x = start_position[0],
+            .pos_y = start_position[1],
+            .lpos_x = start_position[0] - start_velocity[0],
+            .lpos_y = start_position[1] - start_velocity[1],
             .radius = radius,
             .color = color,
         };
     }
 };
-
 
 const ColorGenerator = struct {
     r: u8 = 255,
@@ -71,37 +73,42 @@ const ColorGenerator = struct {
     }
 };
 
-
 pub const ParticalEmitter = struct {
     spawn_rate: u32,
     last_update: u64 = 0,
-    active: bool = true,
-    position: rl.Vector2,
-    velocity: rl.Vector2,
+    active: bool = false,
+    pos_x: f32 = 0,
+    pos_y: f32 = 0,
+    emit_vel_x: f32 = 0,
+    emit_vel_y: f32 = 0,
     color: ColorGenerator = .{},
 
     pub fn init(spawn_rate: u32) @This() {
         return .{
             .spawn_rate = spawn_rate,
-            .last_update = spawn_rate,
-            .active = false,
-            .position = rl.Vector2.init(0.0, 0.0),
-            .velocity = rl.Vector2.init(0.0, 0.0),
         };
     }
 
     pub fn setPosition(self: *@This(), position: [2]f32) void {
-        self.position = rl.Vector2.init(position[0], position[1]);
+        self.pos_x = position[0];
+        self.pos_y = position[1];
     }
 
-    fn updateEmitVelocity(self: *@This()) void {
-        const m_pos = rl.Vector2.init(
-            @as(f32, @floatFromInt(rl.getMouseX())),
-            @as(f32, @floatFromInt(rl.getMouseY())),
-        );
-        const displacement = rl.Vector2.subtract(m_pos, self.position);
-        const direction = rl.Vector2.normalize(displacement);
-        self.velocity = rl.Vector2.scale(direction, 9.0);
+    fn norm2(x: f32, y: f32) struct { f32, f32 } {
+        const len = @sqrt(x * x + y * y);
+        if (len > 0) {
+            return .{ x / len, y / len };
+        } else {
+            return .{0, 0};
+        }
+    }
+
+    fn setEmitVelocity(self: *@This(), target: [2]f32) void {
+        const displacement_x = target[0] - self.pos_x + 1;  // avoid a displacement near 0 by adding 1
+        const displacement_y = target[1] - self.pos_y + 1; 
+        const direction_x, const direction_y = norm2(displacement_x, displacement_y);
+        self.emit_vel_x = direction_x * 9.0;
+        self.emit_vel_y = direction_y * 9.0;
     }
 
     pub fn start(self: *@This()) void {
@@ -116,12 +123,14 @@ pub const ParticalEmitter = struct {
         if (!self.active) return;
         self.last_update += elapsed_ms;
         if (self.last_update > self.spawn_rate) {
-            self.updateEmitVelocity();
+            self.setEmitVelocity(
+                .{ @as(f32, @floatFromInt(rl.getMouseX())), @as(f32, @floatFromInt(rl.getMouseY())) },
+            );
             // Create new partical
             const radius = @as(f32, @floatFromInt(rand.intRangeAtMost(u32, 7, 11)));
             try entities.addObject(Partical.init(
-                .{ self.position.x, self.position.y },
-                .{ self.velocity.x, self.velocity.y },
+                .{ self.pos_x, self.pos_y },
+                .{ self.emit_vel_x, self.emit_vel_y},
                 radius,
                 self.color.nextRGBA(),
             ));
@@ -133,18 +142,22 @@ pub const ParticalEmitter = struct {
 pub fn updatePositions(particals: *EntityStore, sim_dt: u32) void {
     const fdt = 1.0 / @as(f32, @floatFromInt(1000 / sim_dt));
     for (particals.getObjects()) |*p| {
-        const velocity = p.current_position - p.last_position;
-        p.last_position = p.current_position;
-        p.current_position = p.last_position + velocity + p.acceleration * @as(Vec2, @splat(fdt * fdt));
-        p.acceleration = @as(Vec2, @splat(0.0));
+        const vx = p.pos_x - p.lpos_x;
+        const vy = p.pos_y - p.lpos_y;
+        p.lpos_x = p.pos_x;
+        p.lpos_y = p.pos_y;
+        p.pos_x = p.lpos_x + vx + p.accel_x * fdt * fdt;
+        p.pos_y = p.lpos_y + vy + p.accel_y * fdt * fdt;
+        p.accel_x = 0;
+        p.accel_y = 0;
     }
 }
 
 pub fn drawParticals(particals: *EntityStore) void {
     for (particals.getObjects()) |*p| {
         rl.drawCircle(
-            @as(i32, @intFromFloat(p.current_position[0])),
-            @as(i32, @intFromFloat(p.current_position[1])),
+            @as(i32, @intFromFloat(p.pos_x)),
+            @as(i32, @intFromFloat(p.pos_y)),
             @as(f32, p.radius),
             rl.getColor(p.color),
         );

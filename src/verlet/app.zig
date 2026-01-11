@@ -13,7 +13,7 @@ pub const Config = struct {
     screenWidth: u32 = 900,
     screenHeight: u32 = 900,
     updateRateHz: u32 = 60,
-    numSubsteps: u32 = 8,
+    numSubsteps: u32 = 12,
     spawnRate: u32 = 50,
 };
 
