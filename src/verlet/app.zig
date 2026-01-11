@@ -9,8 +9,6 @@ const EntitiesStore = @import("entity.zig").EntityStore;
 const Gravity = @import("gravity.zig").Gravity;
 const collision = @import("collisions.zig");
 
-const Vec2 = @Vector(2, f32);
-
 pub const Config = struct {
     screenWidth: u32 = 900,
     screenHeight: u32 = 900,

@@ -29,11 +29,12 @@ zig build run
 - [X] Reset button
 - [X] Random size particles
 - [X] Change colors over time
-- [ ] Smarter collision algorithm
-- [ ] Change container shape
 - [X] Turn gravity on/off
+- [ ] Switch to using rl Vector2
 - [ ] Add logging
 - [ ] Add profiler [Tracy](https://www.reddit.com/r/Zig/comments/zpwoca/is_profiling_with_tracy_still_straightforward_can/)
+- [ ] Smarter collision algorithm
+- [ ] Change container shape
 
 ## First steps
 
@@ -56,4 +57,8 @@ The simulation is also deterministic which is nice. Running the same simulation 
 ![Verlet Doodles Screenshot Deterministic](docs/doodles_deterministic.png)
 
 
+### Notes
 
+Raylib doesn't currently support iOS, but there's a PR with an approach that may work. Not sure if this will be something I want to play with later.
+
+[Raylib iOS Support PR](https://github.com/raysan5/raylib/pull/3880)
