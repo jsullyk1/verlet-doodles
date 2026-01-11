@@ -59,6 +59,57 @@ The simulation is also deterministic which is nice. Running the same simulation 
 
 ### Notes
 
+#### iOS Support
+
 Raylib doesn't currently support iOS, but there's a PR with an approach that may work. Not sure if this will be something I want to play with later.
 
 [Raylib iOS Support PR](https://github.com/raysan5/raylib/pull/3880)
+
+#### Saturating math operators
+
+This if pretty cool. You can specify an arbitrary bit width with zig numbers like `u23`, or `u13` which is weird. It also has saturating operators... the normal ones will panic if an underflow or overflow occurs.
+
+So this alg for cycling through the rainbow uses `u8` sized ints, and relies on the saturating operators. The cycle rate can be arbitrary, and it won't panic.
+
+```zig
+const ColorGenerator = struct {
+    r: u8 = 255,
+    g: u8 = 0,
+    b: u8 = 0,
+    phase: u8 = 0,
+    rate: u8 = 4,
+
+    pub fn nextRGBA(self: *@This()) u32 {
+        switch (self.phase) {
+            0 => {
+                self.g +|= self.rate;
+                if (self.g == 255) self.phase = 1;
+            },
+            1 => {
+                self.r -|= self.rate;
+                if (self.r == 0) self.phase = 2;
+            },
+            2 => {
+                self.b +|= self.rate;
+                if (self.b == 255) self.phase = 3;
+            },
+            3 => {
+                self.g -|= self.rate;
+                if (self.g == 0) self.phase = 4;
+            },
+            4 => {
+                self.r +|= self.rate;
+                if (self.r == 255) self.phase = 5;
+            },
+            5 => {
+                self.b -|= self.rate;
+                if (self.b == 0) self.phase = 0;
+            },
+            else => {},
+        }
+        return (@as(u32, self.r) << 24) | (@as(u32, self.g) << 16) | (@as(u32, self.b) << 8) | 0xFF;
+    }
+};
+```
+
+
