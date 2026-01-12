@@ -133,14 +133,14 @@ pub const ParticalEmitter = struct {
 };
 
 pub fn updatePositionsVerlet(particals: *EntityStore, sim_dt: u32) void {
-    const fdt = 1.0 / @as(f32, @floatFromInt(1000 / sim_dt));
+    const dt = @as(f32, @floatFromInt(sim_dt)) / 1000.0;
     for (particals.getObjects()) |*p| {
-        const vx = p.pos_x - p.lpos_x;
-        const vy = p.pos_y - p.lpos_y;
+        const dpl_x = p.pos_x - p.lpos_x;
+        const dpl_y = p.pos_y - p.lpos_y;
         p.lpos_x = p.pos_x;
         p.lpos_y = p.pos_y;
-        p.pos_x = p.lpos_x + vx + p.accel_x * fdt * fdt;
-        p.pos_y = p.lpos_y + vy + p.accel_y * fdt * fdt;
+        p.pos_x = p.lpos_x + dpl_x + p.accel_x * dt * dt;
+        p.pos_y = p.lpos_y + dpl_y + p.accel_y * dt * dt;
         p.accel_x = 0;
         p.accel_y = 0;
     }
