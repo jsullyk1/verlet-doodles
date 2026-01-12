@@ -30,7 +30,7 @@ zig build run
 - [X] Random size particles
 - [X] Change colors over time
 - [X] Turn gravity on/off
-- [ ] Add logging
+- [X] Add logging
 - [ ] Add profiler [Tracy](https://www.reddit.com/r/Zig/comments/zpwoca/is_profiling_with_tracy_still_straightforward_can/)
 - [ ] Switch between AoS and SoA.
 - [ ] Systems need some global state info... like mouse position, keypressed etc, but I don't want raylib to bleed into my

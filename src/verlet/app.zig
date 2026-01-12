@@ -3,7 +3,7 @@ const rl = @import("raylib");
 const Partical = @import("partical.zig").Partical;
 const container = @import("container.zig");
 const ParticalEmitter = @import("partical.zig").ParticalEmitter;
-const updatePositions = @import("partical.zig").updatePositions;
+const updateVerlet = @import("partical.zig").updatePositionsVerlet;
 const drawParticals = @import("partical.zig").drawParticals;
 const EntitiesStore = @import("entity.zig").EntityStore;
 const Gravity = @import("gravity.zig").Gravity;
@@ -25,6 +25,7 @@ pub const App = struct {
     boundary: container.Container,
 
     pub fn init(config: Config) !@This() {
+        rl.setTraceLogLevel(rl.TraceLogLevel.none);
         const particals = EntitiesStore.init();
         const emitter = ParticalEmitter.init(
             config.spawnRate,
@@ -68,7 +69,7 @@ pub const App = struct {
                 const mpos_y = @as(f32, @floatFromInt(rl.getMouseY()));
                 if (self.boundary.isPointInside(.{ mpos_x, mpos_y })) {
                     self.emitter.setPosition(.{ mpos_x, mpos_y });
-                    if(!self.emitter.active) self.emitter.start();
+                    if (!self.emitter.active) self.emitter.start();
                 }
             }
             if (rl.isKeyPressed(rl.KeyboardKey.r)) {
@@ -86,14 +87,15 @@ pub const App = struct {
     fn update(self: *@This(), sim_ms: u32) !void {
         if (self.particals.len() > 10 and rl.getFPS() < 3 * self.config.updateRateHz / 4) self.emitter.stop();
         try self.emitter.update(&self.particals, sim_ms);
-        self.gravity.update(&self.particals, sim_ms);
 
         // Relax constraints
         for (0..self.config.numSubsteps) |_| {
             self.boundary.constrainParticals(&self.particals);
             collision.resolve(&self.particals);
         }
-        updatePositions(&self.particals, sim_ms);
+
+        self.gravity.update(&self.particals, sim_ms);
+        updateVerlet(&self.particals, sim_ms);
     }
 
     fn render(self: *@This()) void {

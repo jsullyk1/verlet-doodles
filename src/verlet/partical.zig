@@ -1,7 +1,9 @@
-const rl = @import("raylib");
 const DefaultPrng = @import("std").Random.DefaultPrng;
 const Random = @import("std").Random;
-const print = @import("std").debug.print;
+
+const rl = @import("raylib");
+
+const norm2 = @import("core").math.norm2;
 const EntityStore = @import("entity.zig").EntityStore;
 
 var prng = DefaultPrng.init(16);
@@ -94,18 +96,9 @@ pub const ParticalEmitter = struct {
         self.pos_y = position[1];
     }
 
-    fn norm2(x: f32, y: f32) struct { f32, f32 } {
-        const len = @sqrt(x * x + y * y);
-        if (len > 0) {
-            return .{ x / len, y / len };
-        } else {
-            return .{0, 0};
-        }
-    }
-
     fn setEmitVelocity(self: *@This(), target: [2]f32) void {
-        const displacement_x = target[0] - self.pos_x + 1;  // avoid a displacement near 0 by adding 1
-        const displacement_y = target[1] - self.pos_y + 1; 
+        const displacement_x = target[0] - self.pos_x + 1; // avoid a displacement near 0 by adding 1
+        const displacement_y = target[1] - self.pos_y + 1;
         const direction_x, const direction_y = norm2(displacement_x, displacement_y);
         self.emit_vel_x = direction_x * 9.0;
         self.emit_vel_y = direction_y * 9.0;
@@ -130,7 +123,7 @@ pub const ParticalEmitter = struct {
             const radius = @as(f32, @floatFromInt(rand.intRangeAtMost(u32, 7, 11)));
             try entities.addObject(Partical.init(
                 .{ self.pos_x, self.pos_y },
-                .{ self.emit_vel_x, self.emit_vel_y},
+                .{ self.emit_vel_x, self.emit_vel_y },
                 radius,
                 self.color.nextRGBA(),
             ));
@@ -139,7 +132,7 @@ pub const ParticalEmitter = struct {
     }
 };
 
-pub fn updatePositions(particals: *EntityStore, sim_dt: u32) void {
+pub fn updatePositionsVerlet(particals: *EntityStore, sim_dt: u32) void {
     const fdt = 1.0 / @as(f32, @floatFromInt(1000 / sim_dt));
     for (particals.getObjects()) |*p| {
         const vx = p.pos_x - p.lpos_x;
