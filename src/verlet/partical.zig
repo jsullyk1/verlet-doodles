@@ -112,6 +112,17 @@ pub const ParticalEmitter = struct {
         self.active = false;
     }
 
+    pub fn emitPartical(self: *@This(), entities: *EntityStore) void {
+        const radius = @as(f32, @floatFromInt(rand.intRangeAtMost(u32, 7, 11)));
+        try entities.addObject(Partical.init(
+                .{ self.pos_x, self.pos_y },
+                .{ 0, 0 },
+                .{ self.emit_vel_x, self.emit_vel_y },
+                radius,
+                self.color.nextRGBA(),
+            ));
+    }
+
     pub fn update(self: *@This(), entities: *EntityStore, elapsed_ms: u64) !void {
         if (!self.active) return;
         self.last_update += elapsed_ms;
@@ -120,13 +131,7 @@ pub const ParticalEmitter = struct {
                 .{ @as(f32, @floatFromInt(rl.getMouseX())), @as(f32, @floatFromInt(rl.getMouseY())) },
             );
             // Create new partical
-            const radius = @as(f32, @floatFromInt(rand.intRangeAtMost(u32, 7, 11)));
-            try entities.addObject(Partical.init(
-                .{ self.pos_x, self.pos_y },
-                .{ self.emit_vel_x, self.emit_vel_y },
-                radius,
-                self.color.nextRGBA(),
-            ));
+            self.emitPartical(entities); 
             self.last_update = 0;
         }
     }
