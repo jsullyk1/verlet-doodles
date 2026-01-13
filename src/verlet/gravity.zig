@@ -9,7 +9,7 @@ pub const Gravity = struct {
         return .{};
     }
 
-    pub fn update(self: @This(), entities: *EntityStore, _: u64) void {
+    pub fn update(self: @This(), entities: *EntityStore) void {
         if (!self.active) return;
         for (entities.getObjects()) |*partical| {
             partical.accel_x += self.g_x;

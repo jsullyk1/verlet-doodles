@@ -3,7 +3,7 @@ const rl = @import("raylib");
 const Partical = @import("partical.zig").Partical;
 const container = @import("container.zig");
 const ParticalEmitter = @import("partical.zig").ParticalEmitter;
-const updateVerlet = @import("partical.zig").updatePositionsVerlet;
+const updateVerlet = @import("partical.zig").updatePositionsVerlet2;
 const drawParticals = @import("partical.zig").drawParticals;
 const EntitiesStore = @import("entity.zig").EntityStore;
 const Gravity = @import("gravity.zig").Gravity;
@@ -13,7 +13,7 @@ pub const Config = struct {
     screenWidth: u32 = 900,
     screenHeight: u32 = 900,
     updateRateHz: u32 = 60,
-    numSubsteps: u32 = 12,
+    numSubsteps: u32 = 6,
     spawnRate: u32 = 50,
 };
 
@@ -58,7 +58,7 @@ pub const App = struct {
     }
 
     pub fn run(self: *@This()) !void {
-        const sim_ms = 1000 / self.config.updateRateHz;
+        const dt = 1.0 / @as(f32, @floatFromInt(self.config.updateRateHz));
         rl.initWindow(@intCast(self.config.screenWidth), @intCast(self.config.screenHeight), "Physics!!");
         defer rl.closeWindow();
         rl.setTargetFPS(@intCast(self.config.updateRateHz));
@@ -79,23 +79,23 @@ pub const App = struct {
                 self.gravity.active = !self.gravity.active;
             }
 
-            try self.update(sim_ms);
+            try self.update(dt);
             self.render();
         }
     }
 
-    fn update(self: *@This(), sim_ms: u32) !void {
+    fn update(self: *@This(), dt: f32) !void {
         if (self.particals.len() > 10 and rl.getFPS() < 3 * self.config.updateRateHz / 4) self.emitter.stop();
-        try self.emitter.update(&self.particals, sim_ms);
+        try self.emitter.update(&self.particals, @as(u32, @intFromFloat(dt * 1000.0)));
 
         // Relax constraints
+        const step_dt = dt / @as(f32, @floatFromInt(self.config.numSubsteps));
         for (0..self.config.numSubsteps) |_| {
             self.boundary.constrainParticals(&self.particals);
-            collision.resolve(&self.particals);
+            collision.resolve2(&self.particals);
+            self.gravity.update(&self.particals);
+            updateVerlet(&self.particals, step_dt);
         }
-
-        self.gravity.update(&self.particals, sim_ms);
-        updateVerlet(&self.particals, sim_ms);
     }
 
     fn render(self: *@This()) void {

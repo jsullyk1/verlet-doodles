@@ -112,11 +112,10 @@ pub const ParticalEmitter = struct {
         self.active = false;
     }
 
-    pub fn emitPartical(self: *@This(), entities: *EntityStore) void {
+    pub fn emitPartical(self: *@This(), entities: *EntityStore) !void {
         const radius = @as(f32, @floatFromInt(rand.intRangeAtMost(u32, 7, 11)));
         try entities.addObject(Partical.init(
                 .{ self.pos_x, self.pos_y },
-                .{ 0, 0 },
                 .{ self.emit_vel_x, self.emit_vel_y },
                 radius,
                 self.color.nextRGBA(),
@@ -130,15 +129,13 @@ pub const ParticalEmitter = struct {
             self.setEmitVelocity(
                 .{ @as(f32, @floatFromInt(rl.getMouseX())), @as(f32, @floatFromInt(rl.getMouseY())) },
             );
-            // Create new partical
-            self.emitPartical(entities); 
+            try self.emitPartical(entities); 
             self.last_update = 0;
         }
     }
 };
 
-pub fn updatePositionsVerlet(particals: *EntityStore, sim_dt: u32) void {
-    const dt = @as(f32, @floatFromInt(sim_dt)) / 1000.0;
+pub fn updatePositionsVerlet(particals: *EntityStore, dt: f32) void {
     for (particals.getObjects()) |*p| {
         const dpl_x = p.pos_x - p.lpos_x;
         const dpl_y = p.pos_y - p.lpos_y;
@@ -146,6 +143,19 @@ pub fn updatePositionsVerlet(particals: *EntityStore, sim_dt: u32) void {
         p.lpos_y = p.pos_y;
         p.pos_x = p.lpos_x + dpl_x + p.accel_x * dt * dt;
         p.pos_y = p.lpos_y + dpl_y + p.accel_y * dt * dt;
+        p.accel_x = 0;
+        p.accel_y = 0;
+    }
+}
+
+pub fn updatePositionsVerlet2(particals: *EntityStore, dt: f32) void {
+    for (particals.getObjects()) |*p| {
+        const new_x = 2 * p.pos_x - p.lpos_x + p.accel_x * dt * dt;
+        const new_y = 2 * p.pos_y - p.lpos_y + p.accel_y * dt * dt;
+        p.lpos_x = p.pos_x;
+        p.lpos_y = p.pos_y;
+        p.pos_x = new_x;
+        p.pos_y = new_y;
         p.accel_x = 0;
         p.accel_y = 0;
     }
