@@ -1,4 +1,5 @@
 const std = @import("std");
+const fs = std.fs;
 
 // Although this function looks imperative, it does not perform the build
 // directly and instead it mutates the build graph (`b`) that will be then
@@ -20,6 +21,9 @@ pub fn build(b: *std.Build) void {
     // of this build script using `b.option()`. All defined flags (including
     // target and optimize options) will be listed when running `zig build --help`
     // in this directory.
+
+    
+    
 
     const raylib_dep = b.dependency("raylib_zig", .{
         .target = target,
@@ -47,14 +51,13 @@ pub fn build(b: *std.Build) void {
         // which requires us to specify a target.
         .target = target,
         .imports = &.{
-                // Here "zig_explore" is the name you will use in your source code to
-                // import this module (e.g. `@import("zig_explore")`). The name is
-                // repeated because you are allowed to rename your imports, which
-                // can be extremely useful in case of collisions (which can happen
-                // importing modules from different packages).
-                .{ .name = "raylib", .module = raylib },
-            },
-
+            // Here "zig_explore" is the name you will use in your source code to
+            // import this module (e.g. `@import("zig_explore")`). The name is
+            // repeated because you are allowed to rename your imports, which
+            // can be extremely useful in case of collisions (which can happen
+            // importing modules from different packages).
+            .{ .name = "raylib", .module = raylib },
+        },
     });
 
     const verlet = b.addModule("verlet", .{
@@ -69,14 +72,14 @@ pub fn build(b: *std.Build) void {
         // which requires us to specify a target.
         .target = target,
         .imports = &.{
-                // Here "zig_explore" is the name you will use in your source code to
-                // import this module (e.g. `@import("zig_explore")`). The name is
-                // repeated because you are allowed to rename your imports, which
-                // can be extremely useful in case of collisions (which can happen
-                // importing modules from different packages).
-                .{ .name = "core", .module = core },
-                .{ .name = "raylib", .module = raylib },
-            },
+            // Here "zig_explore" is the name you will use in your source code to
+            // import this module (e.g. `@import("zig_explore")`). The name is
+            // repeated because you are allowed to rename your imports, which
+            // can be extremely useful in case of collisions (which can happen
+            // importing modules from different packages).
+            .{ .name = "core", .module = core },
+            .{ .name = "raylib", .module = raylib },
+        },
     });
     // Here we define an executable. An executable needs to have a root module
     // which needs to expose a `main` function. While we could add a main function
@@ -115,17 +118,13 @@ pub fn build(b: *std.Build) void {
                 // repeated because you are allowed to rename your imports, which
                 // can be extremely useful in case of collisions (which can happen
                 // importing modules from different packages).
-                .{ .name = "core", .module = core},
+                .{ .name = "core", .module = core },
                 .{ .name = "verlet", .module = verlet },
             },
         }),
     });
     exe.linkLibrary(raylib_artifact);
 
-    // This declares intent for the executable to be installed into the
-    // install prefix when running `zig build` (i.e. when executing the default
-    // step). By default the install prefix is `zig-out/` but can be overridden
-    // by passing `--prefix` or `-p`.
     b.installArtifact(exe);
 
     // This creates a top level step. Top level steps have a name and can be
