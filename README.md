@@ -60,6 +60,15 @@ The simulation is also deterministic which is nice. Running the same simulation 
 ![Verlet Doodles Screenshot Deterministic](docs/doodles_deterministic.png)
 
 
+### WSL2
+
+The following dependencies should be installed to support raylib on WSL
+
+```bash
+sudo apt update
+sudo apt install build-essential git cmake libasound2-dev mesa-common-dev libx11-dev libxrandr-dev libxi-dev xorg-dev libgl1-mesa-dev libglu1-mesa-dev
+```
+
 ### Notes
 
 #### iOS Support

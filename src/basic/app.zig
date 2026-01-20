@@ -1,17 +1,16 @@
+const std = @import("std");
+
 const rl = @import("raylib");
 
 const Partical = @import("partical.zig").Partical;
+const Wall = @import("wall.zig").Wall;
 const container = @import("container.zig");
 const ParticalEmitter = @import("partical.zig").ParticalEmitter;
 const updateVerlet = @import("partical.zig").updatePositionsVerlet2;
 const drawParticals = @import("partical.zig").drawParticals;
-const EntitiesStore = @import("entity.zig").EntityStore;
+const EntitiesStoreAOS = @import("entity.zig").EntityStoreAOS;
 const Gravity = @import("gravity.zig").Gravity;
 const collision = @import("collisions.zig");
-
-pub fn createApp() type {
-    return App;
-}
 
 pub const Config = struct {
     screenWidth: u32 = 900,
@@ -23,32 +22,33 @@ pub const Config = struct {
 
 pub const App = struct {
     config: Config,
-    particals: EntitiesStore,
+    particals: EntitiesStoreAOS(Partical),
+    walls: EntitiesStoreAOS(Wall),
     emitter: ParticalEmitter,
     gravity: Gravity,
-    boundary: container.Container,
 
     pub fn init(config: Config) !@This() {
         rl.setTraceLogLevel(rl.TraceLogLevel.none);
-        const particals = EntitiesStore.init();
+        const particals = EntitiesStoreAOS(Partical).init();
+        var walls = EntitiesStoreAOS(Wall).init();
+        const top = .{ @as(f32, @floatFromInt(rl.getScreenWidth()))/2, 0.0};
+        const right = .{ @as(f32, @floatFromInt(rl.getScreenWidth())), @as(f32, @floatFromInt(rl.getScreenHeight())) / 2};
+        const bottom = .{ @as(f32, @floatFromInt(rl.getScreenWidth())) / 2, @as(f32, @floatFromInt(rl.getScreenHeight()))};
+        const left = .{ 0.0, @as(f32, @floatFromInt(rl.getScreenHeight())) / 2};
+        try walls.addObject(Wall.init(top, .{0.0, 1.0}, 0xFFFFFFFF));
+        try walls.addObject(Wall.init(right, .{-1.0, 0.0}, 0xFFFFFFFF));
+        try walls.addObject(Wall.init(bottom, .{0.0, -1.0}, 0xFFFFFFFF));
+        try walls.addObject(Wall.init(left, .{1.0, 0.0}, 0xFFFFFFFF));
         const emitter = ParticalEmitter.init(
             config.spawnRate,
         );
         const gravity = Gravity.init();
-        const boundary = container.Container.init(
-            .{
-                @as(f32, @floatFromInt(config.screenWidth / 2)),
-                @as(f32, @floatFromInt(config.screenHeight / 2)),
-            },
-            @min(@as(f32, @floatFromInt(config.screenWidth / 2 - 5)), @as(f32, @floatFromInt(config.screenHeight / 2 - 5))),
-            0x000000FF,
-        );
         return .{
             .config = config,
             .particals = particals,
+            .walls = walls,
             .emitter = emitter,
             .gravity = gravity,
-            .boundary = boundary,
         };
     }
 
@@ -71,10 +71,8 @@ pub const App = struct {
             if (rl.isMouseButtonReleased(rl.MouseButton.left)) {
                 const mpos_x = @as(f32, @floatFromInt(rl.getMouseX()));
                 const mpos_y = @as(f32, @floatFromInt(rl.getMouseY()));
-                if (self.boundary.isPointInside(.{ mpos_x, mpos_y })) {
-                    self.emitter.setPosition(.{ mpos_x, mpos_y });
-                    if (!self.emitter.active) self.emitter.start();
-                }
+                self.emitter.setPosition(.{ mpos_x, mpos_y });
+                try self.emitter.emitPartical(&self.particals);
             }
             if (rl.isKeyPressed(rl.KeyboardKey.r)) {
                 self.reset();
@@ -95,7 +93,6 @@ pub const App = struct {
         // Relax constraints
         const step_dt = dt / @as(f32, @floatFromInt(self.config.numSubsteps));
         for (0..self.config.numSubsteps) |_| {
-            self.boundary.constrainParticals(&self.particals);
             collision.resolve2(&self.particals);
             self.gravity.update(&self.particals);
             updateVerlet(&self.particals, step_dt);
@@ -106,8 +103,8 @@ pub const App = struct {
         rl.beginDrawing();
         defer rl.endDrawing();
 
-        rl.clearBackground(rl.Color.white);
-        container.render(&self.boundary);
+        rl.clearBackground(rl.Color.black);
+        // container.render(&self.boundary);
         drawParticals(&self.particals);
         rl.drawFPS(@as(i32, @intCast(self.config.screenWidth)) - 80, 20);
         rl.drawText("Verlet Simulation", 20, 20, 20, rl.Color.black);
